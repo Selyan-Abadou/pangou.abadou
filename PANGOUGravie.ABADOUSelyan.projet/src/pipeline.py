@@ -226,11 +226,16 @@ def run_pipeline(
             "input_file": str(data_path),
             "config_used": str(config_path),
             "output_dir": str(outdir),
-            "results_summary": {
-                k: {"success": v.get("error") is None, "error": v.get("error", None)}
-                for k, v in results.items()
-            }
+            "results_summary": {}
         }
+        for k, v in results.items():
+            # Les listes sont toujours un succès (même si vides)
+            if isinstance(v, list):
+                execution_meta["results_summary"][k] = {"success": True, "error": None, "count": len(v)}
+            elif isinstance(v, dict):
+                execution_meta["results_summary"][k] = {"success": v.get("error") is None, "error": v.get("error", None)}
+            else:
+                execution_meta["results_summary"][k] = {"success": True, "error": None}
         results_file = outdir / "execution_results.json"
         with open(results_file, "w", encoding="utf-8") as f:
             json.dump(execution_meta, f, indent=2, default=str)

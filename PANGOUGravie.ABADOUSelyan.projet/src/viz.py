@@ -281,14 +281,14 @@ def create_correlation_heatmap(
         fig, ax = plt.subplots(figsize=figsize)
 
         # S'assurer que c'est un DataFrame numérique
-        if not pd.api.types.is_numeric_dtype(corr_matrix.values.flatten()).any():
-            # Tenter la conversion
-            try:
+        try:
+            corr_values = corr_matrix.values.flatten()
+            if not all(isinstance(v, (int, float, np.number)) for v in corr_values):
                 corr_matrix = corr_matrix.astype(float)
-            except Exception:
-                logger.warning("Matrice de corrélation non convertible en numérique")
-                plt.close(fig)
-                return None
+        except Exception:
+            logger.warning("Matrice de corrélation non convertible en numérique")
+            plt.close(fig)
+            return None
 
         im = ax.imshow(corr_matrix.values, cmap="coolwarm", aspect="auto", vmin=-1, vmax=1)
 

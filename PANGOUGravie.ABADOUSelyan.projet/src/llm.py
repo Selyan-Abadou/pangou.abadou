@@ -239,9 +239,17 @@ class OpenAIWrapper:
             raise LLMError("LLM non initialisé")
 
         try:
+            # Ajouter "json" dans le prompt pour respecter l'exigence OpenAI
+            # quand response_format est json_object
+            user_prompt_with_json = (
+                f"{user_prompt}\n\n"
+                "IMPORTANT: Réponds UNIQUEMENT avec du JSON. "
+                "N'inclue aucun texte autre que le JSON demandé."
+            )
+
             messages = [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt_with_json}
             ]
 
             # Forcer le format JSON
@@ -372,7 +380,9 @@ def run_llm_text(config: Dict[str, Any], system_prompt: str, user_prompt: str) -
     if not llm_enabled(config):
         raise LLMError("LLM désactivé dans la configuration")
 
-    wrapper = OpenAIWrapper(config)
+    # Extraire la sous-configuration llm si elle existe
+    llm_config = config.get('llm', config) if isinstance(config, dict) and 'llm' in config else config
+    wrapper = OpenAIWrapper(llm_config)
     if not wrapper.enabled:
         raise LLMError("LLM non disponible (pas de clé API)")
 
@@ -385,7 +395,7 @@ def run_llm_json(config: Dict[str, Any], system_prompt: str, user_prompt: str) -
     Exécute une requête JSON avec l'API OpenAI.
 
     Args:
-        config: Configuration LLM
+        config: Configuration LLM (ex: {'llm': {'enabled': True, 'model': 'gpt-4o'}})
         system_prompt: Le prompt système
         user_prompt: Le prompt utilisateur
 
@@ -395,7 +405,9 @@ def run_llm_json(config: Dict[str, Any], system_prompt: str, user_prompt: str) -
     if not llm_enabled(config):
         raise LLMError("LLM désactivé dans la configuration")
 
-    wrapper = OpenAIWrapper(config)
+    # Extraire la sous-configuration llm si elle existe
+    llm_config = config.get('llm', config) if isinstance(config, dict) and 'llm' in config else config
+    wrapper = OpenAIWrapper(llm_config)
     if not wrapper.enabled:
         raise LLMError("LLM non disponible (pas de clé API)")
 
